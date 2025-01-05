@@ -449,6 +449,8 @@ export const config: Config = {
     "Ubiquiti AirRouter",
     "VoCore 8M",
     "VoCore 16M",
+    "WD My Net N600",
+    "WD My Net N750",
   ],
   deprecation_enabled: true,
   deprecation_text: undefined,
