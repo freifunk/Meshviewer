@@ -16,7 +16,7 @@
     "eslint-config-prettier": "^9.1.0",
     "prettier": "3.0.3",
     "sass": "^1.69.7",
-    "typescript": "^5.2.2",
+    "typescript": "^5.7.2",
     "vite": "^5.0.13",
     "vite-plugin-checker": "^0.6.2",
     "vite-plugin-pwa": "^0.17.3"
