@@ -22,6 +22,7 @@
     "vite-plugin-pwa": "^0.17.3"
   },
   "dependencies": {
+    "@maplibre/maplibre-gl-leaflet": "^0.0.17",
     "@types/d3-collection": "^1.0.12",
     "@types/d3-drag": "^3.0.5",
     "@types/d3-ease": "^3.0.1",

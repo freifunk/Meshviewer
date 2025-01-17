@@ -1,4 +1,5 @@
 import * as L from "leaflet";
+import "@maplibre/maplibre-gl-leaflet";
 
 import { ClientLayer } from "./map/clientlayer";
 import { LabelLayer } from "./map/labellayer";
@@ -83,7 +84,9 @@ export const Map = function (linkScale: (t: any) => any, sidebar: ReturnType<typ
   let layers = config.mapLayers.map(function (layer) {
     return {
       name: layer.name,
-      layer: L.tileLayer(
+      layer: layer.type == "vector"?
+        L.maplibreGL({style: layer.url})
+        : L.tileLayer(
         layer.url.replace(
           "{format}",
           document.createElement("canvas").toDataURL("image/webp").indexOf("data:image/webp") === 0 ? "webp" : "png",
