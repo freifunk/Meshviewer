@@ -16,8 +16,8 @@
     "prettier": "3.0.3",
     "sass": "^1.69.7",
     "typescript": "^5.7.2",
-    "vite": "^5.0.13",
-    "vite-plugin-checker": "^0.6.2",
+    "vite": "^6.0.7",
+    "vite-plugin-checker": "^0.8.0",
     "vite-plugin-pwa": "^0.21.1"
   },
   "dependencies": {
