@@ -8,7 +8,7 @@ export type LanguageCode = string;
 export let _: Polyglot & { phrases?: { [k: string]: any } };
 
 export const Language = function () {
-  let router: ReturnType<typeof Router>;
+  let router: Router;
   let config = globalThis.config;
 
   function languageSelect(el: HTMLElement) {
@@ -62,7 +62,7 @@ export const Language = function () {
     }
   }
 
-  function init(routing: ReturnType<typeof Router>) {
+  function init(routing: Router) {
     router = routing;
     /** global: _ */
     _ = new Polyglot({ locale: getLocale(routing.getLang()), allowMissing: true });

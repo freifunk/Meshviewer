@@ -80,7 +80,7 @@ export const main = () => {
 
   let config = window.config;
   let language = Language();
-  let router = (window.router = Router(language));
+  let router = (window.router = new Router(language));
 
   config.dataPath.forEach(function (_element, i) {
     config.dataPath[i] += "meshviewer.json";
@@ -108,14 +108,14 @@ export const main = () => {
         })();
       });
     })
-    .then(function (nodesData) {
+    .then(function (nodesData: any) {
       let gui = Gui(language);
       gui.setData(nodesData);
       router.setData(nodesData);
       router.resolve();
 
       window.setInterval(function () {
-        update().then(function (nodesData) {
+        update().then(function (nodesData: any) {
           gui.setData(nodesData);
           router.setData(nodesData);
         });
