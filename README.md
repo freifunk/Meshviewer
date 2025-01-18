@@ -53,11 +53,11 @@ docker run -it --rm --name meshviewer-dev \
 
 The configuration documentation is nowhere near finished.
 
-### Deprecation Warning
+### Deprecation and EOL Warning
 
-The deprecation warning can be turned of with `"deprecation_enabled": false` - but we wouldn't suggest it.
+Both the deprecation and the EOL warning can be turned off with `"deprecation_enabled": false` - but we wouldn't suggest it.
 
-You can insert your own HTML into the deprecation warning via `"deprecation_text":""`.
+You can insert custom HTML into the deprecation and eol warning via `"deprecation_text":""` and `"eol_text":""` respectively.
 
 ## Development
 

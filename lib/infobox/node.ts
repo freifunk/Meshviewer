@@ -184,11 +184,17 @@ export function Node(el: HTMLElement, node: NodeData, linkScale: (t: any) => any
   let deprecation = document.createElement("div");
   deprecation.setAttribute("class", "deprecated");
   deprecation.setAttribute("style", "display: none;");
-  deprecation.innerHTML = "<div>" + (config.deprecation_text || _.t("deprecation")) + "</div>";
+  deprecation.innerHTML = "<div>" + (config.deprecation_text || _.t("deprecation-text")) + "</div>";
+
+  var eol = document.createElement("div");
+  eol.setAttribute("class", "eol");
+  eol.setAttribute("style", "display: none;");
+  eol.innerHTML = "<div>" + (config.eol_text || _.t("eol-text")) + "</div>";
 
   el.appendChild(header);
   el.appendChild(devicePicture);
   el.appendChild(deprecation);
+  el.appendChild(eol);
   el.appendChild(table);
   el.appendChild(neighbours);
   el.appendChild(tableNeighbour.el);
@@ -217,7 +223,9 @@ export function Node(el: HTMLElement, node: NodeData, linkScale: (t: any) => any
       // Check if device is in list of deprecated devices. If so, display the deprecation warning
       if (config.deprecation_enabled) {
         if (row.name === "node.hardware") {
-          if (config.deprecated && field && config.deprecated.includes(field)) {
+          if (config.eol && field && config.eol.includes(field)) {
+            eol.setAttribute("style", "display: block;");
+          } else if (config.deprecated && field && config.deprecated.includes(field)) {
             deprecation.setAttribute("style", "display: block;");
           }
         }

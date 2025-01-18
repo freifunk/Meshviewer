@@ -67,5 +67,6 @@
   "devicePicturesLicense": "CC-BY-NC-SA 4.0",
   "node_custom": "/[^a-z0-9\\-\\.]/ig",
   "deprecation_text": "Hier kann ein eigener Text für die Deprecation Warning (inkl. HTML) stehen!",
+  "eol_text": "Hier kann ein eigener Text für die End-of-Life Warnung (inkl. HTML) stehen!",
   "deprecation_enabled": true
 }

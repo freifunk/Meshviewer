@@ -91,12 +91,11 @@ strong {
   width: 1px;
 }
 
-.deprecated {
+.deprecation_base {
   padding-left: $button-distance;
   padding-right: $button-distance;
 
   div {
-    background: $color-warning;
     border-radius: 5px;
     color: $color-white;
     font-size: 110%;
@@ -113,6 +112,20 @@ strong {
         text-decoration: none;
       }
     }
+  }
+}
+
+.deprecated {
+  @extend .deprecation_base;
+  div {
+    background: $color-warning;
+  }
+}
+
+.eol {
+  @extend .deprecation_base;
+  div {
+    background: $color-error;
   }
 }
 

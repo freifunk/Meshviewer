@@ -124,7 +124,9 @@ export const Proportions = function (filterManager: ReturnType<typeof DataDistri
     let fwDict = count(nodes, ["firmware", "release"]);
     let baseDict = count(nodes, ["firmware", "base"]);
     let deprecationDict = count(nodes, ["model"], function (d) {
-      return config.deprecated && d && config.deprecated.includes(d) ? _.t("yes") : _.t("no");
+      if (config.deprecated && d && config.deprecated.includes(d)) return _.t("deprecation");
+      if (config.eol && d && config.eol.includes(d)) return _.t("eol");
+      return _.t("no");
     });
     let hwDict = count(nodes, ["model"]);
     let geoDict = count(nodes, ["location"], function (d) {
