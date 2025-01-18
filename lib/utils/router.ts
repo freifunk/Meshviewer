@@ -1,4 +1,4 @@
-import Navigo from "navigo";
+import Navigo, { Match } from "navigo";
 import { Language } from "./language";
 import { Link, NodeId } from "./node";
 import { Moment } from "moment";
@@ -28,12 +28,12 @@ interface Views {
   [k: string]: () => any;
 }
 
-export const Router = function (language: ReturnType<typeof Language>) {
-  let init = false;
-  let objects: Objects = { nodeDict: [], links: [] };
-  let targets: Target[] = [];
-  let views: Views = {};
-  let current = {
+export class Router extends Navigo {
+  init = false;
+  objects: Objects = { nodeDict: [], links: [] };
+  targets: Target[] = [];
+  views: Views = {};
+  currentState = {
     lang: undefined, // like de or en
     view: undefined, // map or graph
     node: undefined, // Node ID
@@ -42,51 +42,59 @@ export const Router = function (language: ReturnType<typeof Language>) {
     lat: undefined,
     lng: undefined,
   };
-  let state = { lang: language.getLocale(), view: "map" };
+  state = { lang: null, view: "map" };
+  language = undefined;
 
-  function resetView() {
-    targets.forEach(function (target) {
+  constructor(language: ReturnType<typeof Language>) {
+    super("/", { hash: true });
+    this.language = language;
+    this.state.lang = language.getLocale();
+    this.initRoutes();
+  }
+
+  resetView() {
+    this.targets.forEach(function (target) {
       target.resetView();
     });
   }
 
-  function gotoNode(node: { nodeId: NodeId }) {
-    if (objects.nodeDict[node.nodeId]) {
-      targets.forEach(function (target) {
-        target.gotoNode(objects.nodeDict[node.nodeId], objects.nodeDict);
+  gotoNode(node: { nodeId: NodeId }) {
+    if (this.objects.nodeDict[node.nodeId]) {
+      this.targets.forEach((target) => {
+        target.gotoNode(this.objects.nodeDict[node.nodeId], this.objects.nodeDict);
       });
     }
   }
 
-  function gotoLink(linkData: { linkId: string }) {
-    let link = objects.links.filter(function (value) {
+  gotoLink(linkData: { linkId: string }) {
+    let link = this.objects.links.filter(function (value) {
       return value.id === linkData.linkId;
     });
     if (link) {
-      targets.forEach(function (target) {
+      this.targets.forEach(function (target) {
         target.gotoLink(link);
       });
     }
   }
 
-  function view(data: { view: string }) {
-    if (data.view in views) {
-      views[data.view]();
-      state.view = data.view;
-      resetView();
+  view(data: { view: string }) {
+    if (data.view in this.views) {
+      this.views[data.view]();
+      this.state.view = data.view;
+      this.resetView();
     }
   }
 
-  function customRoute(
-    lang?: string,
-    viewValue?: "map" | "graph" | string,
-    node?: string,
-    link?: string,
-    zoom?: number | string,
-    lat?: number | string,
-    lng?: number | string,
-  ) {
-    current = {
+  customRoute(match?: Match) {
+    let lang: string | undefined = match.data[0];
+    let viewValue: "map" | "graph" | string | undefined = match.data[1];
+    let node: string | undefined = match.data[2];
+    let link: string | undefined = match.data[3];
+    let zoom: number | string | undefined = match.data[4];
+    let lat: number | string | undefined = match.data[5];
+    let lng: number | string | undefined = match.data[6];
+
+    this.currentState = {
       lang: lang,
       view: viewValue,
       node: node,
@@ -96,55 +104,73 @@ export const Router = function (language: ReturnType<typeof Language>) {
       lng: lng,
     };
 
-    if (lang && lang !== state.lang && lang === language.getLocale(lang)) {
+    if (lang && lang !== this.state.lang && lang === this.language.getLocale(lang)) {
+      console.debug("Language change reload");
+      location.hash = "/" + match.url;
       location.reload();
     }
 
-    if (!init || (viewValue && viewValue !== state.view)) {
+    if (!this.init || (viewValue && viewValue !== this.state.view)) {
       if (!viewValue) {
-        viewValue = state.view;
+        viewValue = this.state.view;
       }
-      view({ view: viewValue });
-      init = true;
+      this.view({ view: viewValue });
+      this.init = true;
     }
 
     if (node) {
-      gotoNode({ nodeId: node });
+      this.gotoNode({ nodeId: node });
     } else if (link) {
-      gotoLink({ linkId: link });
+      this.gotoLink({ linkId: link });
     } else if (lat) {
-      targets.forEach(function (target) {
+      this.targets.forEach((target) => {
         target.gotoLocation({
-          zoom: parseInt(current.zoom, 10),
-          lat: parseFloat(current.lat),
-          lng: parseFloat(current.lng),
+          zoom: parseInt(this.currentState.zoom, 10),
+          lat: parseFloat(this.currentState.lat),
+          lng: parseFloat(this.currentState.lng),
         });
       });
     } else {
-      resetView();
+      this.resetView();
     }
   }
 
-  let router = new Navigo(null, true, "#!");
-
-  router
-    .on(
-      /^\/?#?!?\/(\w{2})?\/?(map|graph)?\/?([a-f\d]{12})?([a-f\d\-]{25})?\/?(?:(\d+)\/(-?[\d.]+)\/(-?[\d.]+))?$/,
-      customRoute,
-    )
-    .on({
-      "*": function () {
-        router.fullUrl();
+  initRoutes() {
+    this.on(
+      // Redirect legacy URL format
+      /^\/?!(.*)?$/,
+      (match?: Match) => {
+        console.debug("fixing legacy url");
+        this.navigate(match.data[0]);
       },
-    });
+    )
+      .on(
+        // lang, viewValue, node, link, zoom, lat, lon
+        /^\/?(\w{2})?\/?(map|graph)?\/?([a-f\d]{12})?([a-f\d\-]{25})?\/?(?:(\d+)\/(-?[\d.]+)\/(-?[\d.]+))?$/,
+        (match?: Match) => {
+          this.customRoute(match);
+        },
+      )
+      // Default response
+      .on(() => {
+        console.debug("default route redirect");
+        this.fullUrl();
+      })
+      // 404 response
+      .notFound(() => {
+        console.debug("notFound redirect");
+        this.fullUrl();
+      });
+  }
 
-  router.generateLink = function generateLink(data?: {}, full?: boolean, deep?: boolean) {
-    let result = "#!";
+  generateLink(data?: {}, full?: boolean, deep?: boolean) {
+    let result = "";
 
     if (full) {
-      data = Object.assign({}, state, data);
+      data = Object.assign({}, this.state, data);
     } else if (deep) {
-      data = Object.assign({}, current, data);
+      result = "#";
+      data = Object.assign({}, this.currentState, data);
     }
 
     for (let key in data) {
@@ -155,45 +181,42 @@ export const Router = function (language: ReturnType<typeof Language>) {
     }
 
     return result;
-  };
+  }
 
-  router.fullUrl = function fullUrl(data?: {}, e?: Event | false, deep?: boolean) {
+  fullUrl(data?: {}, e?: Event | false, deep?: boolean) {
     if (e) {
       e.preventDefault();
     }
-    router.navigate(router.generateLink(data, !deep, deep), false);
-  };
+    this.navigate(this.generateLink(data, !deep, deep));
+  }
 
-  router.getLang = function getLang() {
-    let lang = location.hash.match(/^\/?#!?\/(\w{2})\//);
+  getLang() {
+    let lang = location.hash.match(/^\/?#?\/(\w{2})\//);
     if (lang) {
-      state.lang = language.getLocale(lang[1]);
+      this.state.lang = this.language.getLocale(lang[1]);
       return lang[1];
     }
     return null;
-  };
+  }
 
-  router.addTarget = function addTarget(target: Target) {
-    targets.push(target);
-  };
-
-  router.removeTarget = function removeTarget(target: Target) {
-    targets = targets.filter(function (t) {
+  addTarget(target: Target) {
+    this.targets.push(target);
+  }
+  removeTarget(target: Target) {
+    this.targets = this.targets.filter(function (t) {
       return target !== t;
     });
-  };
+  }
 
-  router.addView = function addView(key: string, view: () => any) {
-    views[key] = view;
-  };
+  addView(key: string, view: () => any) {
+    this.views[key] = view;
+  }
 
-  router.currentView = function currentView(): string | undefined {
-    return current.view;
-  };
+  currentView(): string | undefined {
+    return this.currentState.view;
+  }
 
-  router.setData = function setData(data: Objects) {
-    objects = data;
-  };
-
-  return router;
-};
+  setData(data: Objects) {
+    this.objects = data;
+  }
+}
